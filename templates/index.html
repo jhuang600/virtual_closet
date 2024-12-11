@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>What's in My Closet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Welcome to My Closet!</h1>
+    <p>This is where you’ll see your items.</p>
+
+    <form id="searchForm">
+        <input type="text" id="searchName" placeholder="Search by name">
+        <select id="searchCategory">
+            <option value="">All Categories</option>
+            <option value="Top">Top</option>
+            <option value="Bottom">Bottom</option>
+            <option value="Dress & skirt">Dress & skirt</option>
+            <option value="Sleepwear & Loungewear">Sleepwear & Loungewear</option>
+            <option value="Outerwear">Outerwear</option>
+            <option value="Innerwear & Underwear">Innerwear & Underwear</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Shoes">Shoes</option>
+        </select>
+        <select id="searchColor">
+            <option value="">All Colors</option>
+            <option value="Red">Red</option>
+            <option value="Blue">Blue</option>
+            <option value="Green">Green</option>
+            <option value="Black">Black</option>
+            <option value="White">White</option>
+            <option value="Gray">Gray</option>
+            <option value="Brown">Brown</option>
+            <option value="Cream">Cream</option>
+            <option value="Orange">Orange</option>
+            <option value="Yellow">Yellow</option>
+            <option value="Pink">Pink</option>
+            <option value="Purple">Purple</option>
+        </select>
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Placeholder for displaying results -->
+    <div id="results"></div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>

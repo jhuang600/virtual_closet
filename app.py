@@ -112,16 +112,6 @@ def update_item(id):
     db.session.commit()
     return jsonify({'message': 'Item updated successfully'})
 
-# def update_item(id):
-#     item = Item.query.get_or_404(id)
-#     data = request.json
-#     item.name = data.get('name', item.name)
-#     item.category = data.get('category', item.category)
-#     item.color = data.get('color', item.color)
-#     db.session.commit()
-#     return jsonify({'message': 'Item updated successfully'})
-
-# Route to search for items by name, category and color
 @app.route('/items/search', methods=['GET'])
 def search_items():
     name = request.args.get('name', '').lower()

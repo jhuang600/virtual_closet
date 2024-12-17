@@ -7,8 +7,16 @@ body {
     color: #333;
 }
 
-h1, h2 {
-    color: #333;
+h1 {
+    color: white;
+    margin-bottom: 10px;
+
+}
+
+h2, h3 {
+    color: #5C4033;
+    margin-bottom: 10px;
+
 }
 
 input, select, button {
@@ -19,7 +27,7 @@ input, select, button {
 }
 
 button {
-    background-color: #4CAF50;
+    background-color: #5C4033;
     color: white;
     cursor: pointer;
     align-items: center; 
@@ -27,7 +35,7 @@ button {
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #5C4033;
 }
 
 
@@ -74,7 +82,6 @@ img {
     z-index: 1000;
     background: white;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
-    padding: 20px;
     border-radius: 8px;
     width: 300px;
     text-align: left;
@@ -120,4 +127,40 @@ img {
     height: 100%;
     background: rgba(0, 0, 0, 0.4);
     z-index: -1;
+}
+
+#navbar {
+    background-color: #444; /* Dark gray background */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+#logo {
+    margin: 0;
+    font-size: 1.8em;
+    font-family: Arial, sans-serif;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-item {
+    color: white;
+    text-decoration: none;
+    font-size: 1em;
+    font-family: Arial, sans-serif;
+    transition: color 0.3s;
+}
+
+.nav-item:hover {
+    color: #ffd700; /* Yellow on hover */
 }

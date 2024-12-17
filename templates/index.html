@@ -1,13 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>What's in My Closet</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <h1>Welcome to My Closet!</h1>
     <p>This is where you’ll see your items.</p>
 
+
+    <!-- Upload Form -->
+    <h2>Add a New Item</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="text" id="itemName" placeholder="Item Name" required>
+        <select id="itemCategory" required>
+            <option value="">Select Category</option>
+            <option value="Top">Top</option>
+            <option value="Bottom">Bottom</option>
+            <option value="Dress & skirt">Dress & skirt</option>
+            <option value="Sleepwear & Loungewear">Sleepwear & Loungewear</option>
+            <option value="Outerwear">Outerwear</option>
+            <option value="Innerwear & Underwear">Innerwear & Underwear</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Shoes">Shoes</option>
+        </select>
+        <select id="itemColor" required>
+            <option value="">Select Color</option>
+            <option value="Red">Red</option>
+            <option value="Blue">Blue</option>
+            <option value="Green">Green</option>
+            <option value="Black">Black</option>
+            <option value="White">White</option>
+            <option value="Gray">Gray</option>
+            <option value="Brown">Brown</option>
+            <option value="Cream">Cream</option>
+            <option value="Orange">Orange</option>
+            <option value="Yellow">Yellow</option>
+            <option value="Pink">Pink</option>
+            <option value="Purple">Purple</option>
+        </select>
+        <input type="file" id="itemImage" accept="image/*" required>
+        <button type="submit">Upload Item</button>
+    </form>
+
+    <!-- Searh Form -->
+    <h2>Search Items</h2>
     <form id="searchForm">
         <input type="text" id="searchName" placeholder="Search by name">
         <select id="searchCategory">

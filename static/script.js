@@ -1,3 +1,5 @@
+let currentEditId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("JavaScript is connected!");
 
@@ -48,73 +50,63 @@ document.addEventListener('DOMContentLoaded', () => {
             // send a GET request to the backend with the search parameters
             const response = await fetch(`items/search?${params.toString()}`);
             const data = await response.json();
-
-            // display the results in the results div
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = ''; // clear any previous results
-
-            if (data.length === 0) {
-                resultsDiv.textContent = "No items found!";
-            } else {
-                data.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.setAttribute('id', `item-${item.id}`);
-                    itemDiv.innerHTML = `
-                        <strong>${item.name}</strong> - ${item.category} - ${item.color}
-                        <br>
-                        <img src="${item.image_url}" alt="${item.name}" width="150">
-                        <button class="delete-btn" data-id="${item.id}" style="background: none; border: none; cursor: pointer;">
-                            <i class="fas fa-trash" style="color: red;"></i>
-                        </button>
-                    `;
-                    resultsDiv.appendChild(itemDiv);
-                });
-                // Attach delete event listeners to the dynamically added buttons
-                document.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const id = button.getAttribute('data-id');
-                        deleteItem(id);
-                    });
-                });
-            }
+            displayItems(data);
         } catch (error) {
             console.error('Error fetching items:', error);
         }
     });
+
+    // Function to display items
+    function displayItems(items) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = ''; // Clear previous results
+    
+        if (items.length === 0) {
+            resultsDiv.textContent = "No items found!";
+        } else {
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.setAttribute('id', `item-${item.id}`);
+                itemDiv.innerHTML = `
+                    <strong>${item.name}</strong> - ${item.category} - ${item.color}
+                    <br>
+                    <img src="${item.image_url}" alt="${item.name}" width="150">
+                    <br>
+                    <button class="delete-btn" data-id="${item.id}" style="background: none; border: none; cursor: pointer;">
+                        <i class="fas fa-trash" style="color: red;"></i>
+                    </button>
+                    <button class="update-btn" data-id="${item.id}" style="background: none; border: none; cursor: pointer;">
+                        <i class="fas fa-edit" style="color: blue;"></i>
+                    </button>
+                `;
+                resultsDiv.appendChild(itemDiv);
+            });
+    
+            // Attach event listeners for delete buttons
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = button.getAttribute('data-id');
+                    deleteItem(id);
+                });
+            });
+    
+            // Attach event listeners for update buttons
+            document.querySelectorAll('.update-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = button.getAttribute('data-id');
+                    openUpdateForm(id); // Opens the update form
+                });
+            });
+        }
+    }
+    
 
     // function to load and display all items when the page loads
     async function loadItems() {
         try {
             const response = await fetch('/items');
             const data = await response.json();
-
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
-
-            if (data.length === 0) {
-                resultsDiv.textContent = "No items found!";
-            } else {
-                data.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.setAttribute('id', `item-${item.id}`);
-                    itemDiv.innerHTML = `
-                        <strong>${item.name}</strong> - ${item.category} - ${item.color}
-                        <br>
-                        <img src="${item.image_url}" alt="${item.name}" width="150">
-                        <button class="delete-btn" data-id="${item.id}" style="background: none; border: none; cursor: pointer;">
-                            <i class="fas fa-trash" style="color: red;"></i>
-                        </button>
-                    `;
-                    resultsDiv.appendChild(itemDiv)
-                });
-                // Add event listeners for delete buttons
-                document.querySelectorAll('.delete-btn').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const id = button.getAttribute('data-id');
-                        deleteItem(id);
-                    });
-                });
-            }
+            displayItems(data);
         } catch (error) {
             console.error('Error loading items', error);
         }
@@ -143,6 +135,64 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error deleting item:', error);
         }
     }
+
+    // function to open the update form modal
+    async function openUpdateForm(id) {
+        console.log("openUpdateForm triggered for ID:", id);
+        try {
+            const response = await fetch(`/items/${id}`);
+            if (!response.ok) throw new Error('Failed to fetch item details');
+
+            const item = await response.json();
+            console.log("Fetched item data:", item);
+
+            // Prefill the modal form
+            document.getElementById('updateName').value = item.name;
+            document.getElementById('updateCategory').value = item.category;
+            document.getElementById('updateColor').value = item.color;
+            document.getElementById('updateImage').value = ''; 
+
+            currentEditId = id;
+            const modal = document.getElementById('updateModal');
+            modal.style.display = 'block';
+            console.log("Modal display style set to 'block'");
+        } catch (error) {
+            console.error('Error fetching item details:', error);
+        }
+    }
+
+    // Function to save updates
+    document.getElementById('saveUpdateBtn').addEventListener('click', async () => {
+        const formData = new FormData();
+        formData.append('name', document.getElementById('updateName').value);
+        formData.append('category', document.getElementById('updateCategory').value);
+        formData.append('color', document.getElementById('updateColor').value);
+
+        const image = document.getElementById('updateImage').files[0];
+        if (image) formData.append('image', image);
+
+        try {
+            const response = await fetch(`/items/${currentEditId}`, {
+                method: 'PUT',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error('Failed to update item');
+
+            const result = await response.json();
+            alert(result.message);
+
+            document.getElementById('updateModal').style.display = 'none';
+            loadItems();
+        } catch (error) {
+            console.error('Error updating item:', error);
+        }
+    });
+
+    // Close modal button
+    document.getElementById('closeModalBtn').addEventListener('click', () => {
+        document.getElementById('updateModal').style.display = 'none';
+    });
 
     loadItems();
 });

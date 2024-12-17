@@ -68,6 +68,17 @@ def get_items():
     result = [{'id': item.id, 'name': item.name, 'category': item.category, 'color': item.color,  'image_url': item.image_url} for item in items]
     return jsonify(result)    
 
+@app.route('/items/<int:id>', methods=['GET'])
+def get_item(id):
+    item = Item.query.get_or_404(id)
+    return jsonify({
+        'id': item.id,
+        'name': item.name,
+        'category': item.category,
+        'color': item.color,
+        'image_url': item.image_url
+    })
+
 # Route to delete an item by id
 @app.route('/items/<int:id>', methods=['DELETE'])
 def delete_item(id):
@@ -100,7 +111,7 @@ def update_item(id):
 
     db.session.commit()
     return jsonify({'message': 'Item updated successfully'})
-    
+
 # def update_item(id):
 #     item = Item.query.get_or_404(id)
 #     data = request.json

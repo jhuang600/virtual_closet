@@ -1,6 +1,7 @@
 let currentEditId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    loadItems();
     console.log("JavaScript is connected!");
 
     // event listener for the upload form submisssion
@@ -104,9 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // function to load and display all items when the page loads
     async function loadItems() {
         try {
-            const response = await fetch('/items');
-            const data = await response.json();
-            displayItems(data);
+            const response = await fetch('/items'); 
+            const data = await response.json();    
+            displayItems(data);                   
         } catch (error) {
             console.error('Error loading items', error);
         }
@@ -193,6 +194,49 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('closeModalBtn').addEventListener('click', () => {
         document.getElementById('updateModal').style.display = 'none';
     });
+
+    // Show login modal
+    document.getElementById('showLoginBtn').addEventListener('click', () => {
+        document.getElementById('loginModal').style.display = 'block';
+    });
+
+    // Login function
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                alert('Login successful');
+                document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'block';
+                document.getElementById('showLoginBtn').style.display = 'none';
+                loadItems();
+            } else {
+                alert('Invalid credentials');
+            }
+        } catch (error) {
+            console.error('Error logging in: ', error);
+        } 
+    });
+
+    // Logout function
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        const response = await fetch('/logout');
+        if (response.ok) {
+            alert('Logged out');
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('showLoginBtn').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+        }
+    });
+
 
     loadItems();
 });

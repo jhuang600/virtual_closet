@@ -12,11 +12,15 @@
     <div id="navbar">
         <h1 id="logo">My Closet</h1>
         <div class="nav-links">
-            <a href="#" class="nav-item">ALL USERS</a>
-            <a href="#" class="nav-item">AUTHENTICATE</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('logout') }}" class="nav-item">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-item">Login</a>
+                <a href="{{ url_for('register') }}" class="nav-item">Register</a>
+            {% endif %}
+            <a href="/all-users" class="nav-item">ALL USERS</a>
         </div>
     </div>
-
 
     <!-- Upload Form -->
     <h2>Add a New Item</h2>

@@ -2,6 +2,7 @@ let currentEditId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadItems();
+    loadUsers();
     console.log("JavaScript is connected!");
 
     // event listener for the upload form submisssion
@@ -65,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (items.length === 0) {
             resultsDiv.textContent = "No items found!";
         } else {
-            items.forEach(item => {
+            items.forEach((item) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.setAttribute('id', `item-${item.id}`);
                 itemDiv.innerHTML = `
@@ -82,17 +83,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 resultsDiv.appendChild(itemDiv);
             });
-    
+            
             // Attach event listeners for delete buttons
-            document.querySelectorAll('.delete-btn').forEach(button => {
+            document.querySelectorAll('.delete-btn').forEach((button) => {
                 button.addEventListener('click', () => {
                     const id = button.getAttribute('data-id');
                     deleteItem(id);
                 });
             });
-    
+
             // Attach event listeners for update buttons
-            document.querySelectorAll('.update-btn').forEach(button => {
+            document.querySelectorAll('.update-btn').forEach((button) => {
                 button.addEventListener('click', () => {
                     const id = button.getAttribute('data-id');
                     openUpdateForm(id); // Opens the update form
@@ -111,6 +112,38 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error loading items', error);
         }
+    }
+
+    // Function to load and display all users
+    async function loadUsers() {
+        try {
+            const response = await fetch('/all-users');
+            const users = await response.json();
+
+            const usersDiv = document.getElementById('users');
+            if (!usersDiv) return;
+
+            usersDiv.innerHTML = ''; // Clear previous users
+
+            users.forEach((user) => {
+                const profilePicture = user.profile_picture || '/static/default-avatar.png'; 
+                const userCard = document.createElement('div');
+                userCard.style = 'text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; width: 200px;';
+                userCard.innerHTML = `
+                    <img src="${user.profile_picture}" alt="${user.name}" class="profile-picture">
+                    <h3>${user.name}</h3>
+                    <button onclick="viewUserCloset(${user.id})">View Closet</button>
+                `;
+                usersDiv.appendChild(userCard);
+            });
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+    }
+
+    // Function to view a user's closet
+    async function viewUserCloset(userId) {
+        window.location.href = `/user/${userId}`;
     }
 
     // Function to delete an item
@@ -145,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Failed to fetch item details');
 
             const item = await response.json();
-            console.log("Fetched item data:", item);
 
             // Prefill the modal form
             document.getElementById('updateName').value = item.name;
@@ -156,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentEditId = id;
             const modal = document.getElementById('updateModal');
             modal.style.display = 'block';
-            console.log("Modal display style set to 'block'");
         } catch (error) {
             console.error('Error fetching item details:', error);
         }
@@ -195,35 +226,28 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('updateModal').style.display = 'none';
     });
 
-    // Show login modal
-    document.getElementById('showLoginBtn').addEventListener('click', () => {
-        document.getElementById('loginModal').style.display = 'block';
-    });
-
     // Login function
     document.getElementById('loginBtn').addEventListener('click', async () => {
-        const username = document.getElementById('loginUsername').value;
+        const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        
+
         try {
             const response = await fetch('/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ email, password })
             });
 
             if (response.ok) {
                 alert('Login successful');
                 document.getElementById('loginModal').style.display = 'none';
-                document.getElementById('logoutBtn').style.display = 'block';
-                document.getElementById('showLoginBtn').style.display = 'none';
                 loadItems();
             } else {
                 alert('Invalid credentials');
             }
         } catch (error) {
-            console.error('Error logging in: ', error);
-        } 
+            console.error('Error logging in:', error);
+        }
     });
 
     // Logout function
@@ -231,8 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch('/logout');
         if (response.ok) {
             alert('Logged out');
-            document.getElementById('logoutBtn').style.display = 'none';
-            document.getElementById('showLoginBtn').style.display = 'block';
             document.getElementById('results').innerHTML = '';
         }
     });

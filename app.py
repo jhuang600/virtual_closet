@@ -51,39 +51,66 @@ def load_user(user_id):
 # route to render the homepage
 @app.route('/')
 def home():
-    return render_template('index.html')
+    if current_user.is_authenticated:
+        return redirect('/closet')
+    return redirect('/all-users')
+
+@app.route('/closet', methods=['GET'])
+@login_required
+def closet():
+    items = Item.query.filter_by(user_id=current_user.id).all()
+    return render_template('index.html', user=current_user, items=items)
 
 # Register user
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # Collect form inputs
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
         profile_picture = request.files.get('profile_picture')
+
+        # Hash the password
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        
-        # Check if the email is already in use
+
+        # Check if the email already exists
         if User.query.filter_by(email=email).first():
-            return 'Email is already in use', 400
+            error = 'Email is already in use. Please try another email.'
+            return render_template('register.html', error=error)
 
-        # Save profile picture
-        if profile_picture and profile_picture.filename:
-            filename = secure_filename(profile_picture.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            profile_picture.save(file_path)
-            profile_picture_url = url_for('static', filename=f'uploads/{filename}')
-        else:
-            profile_picture_url = None    
+        # Save the profile picture using save_file
+        profile_picture_path, error = save_file(profile_picture, app.config['UPLOAD_FOLDER'])
+        if error:  # If file saving failed, use the default avatar
+            profile_picture_path = 'default-avatar.png'
 
-        # Create new user
-        user = User(name=name, email=email, password=hashed_password, profile_picture=profile_picture_url)
-        db.session.add(user)
+        # Create the user record
+        new_user = User(
+            name=name,
+            email=email,
+            password=hashed_password,
+            profile_picture=url_for('static', filename=profile_picture_path)
+        )
+        db.session.add(new_user)
         db.session.commit()
-        
+
         return redirect('/login')
 
-    return render_template('register.html')
+    return render_template('register.html', error=None)
+
+
+
+def save_file(file, upload_folder):
+    if not file or file.filename == '':
+        return None, 'No selected file'
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(upload_folder, filename)
+    try:
+        file.save(file_path)
+        return f'uploads/{filename}', None
+    except Exception as e:
+        print(f"Error saving file: {e}")
+        return None, 'Failed to upload file'
 
 # Login user
 @app.route('/login', methods=['GET', 'POST'])
@@ -93,13 +120,18 @@ def login():
         password = request.form['password']
         
         user = User.query.filter_by(email=email).first()
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            return redirect('/')
+        if user:
+            if check_password_hash(user.password, password):
+                login_user(user)
+                return redirect('/')
+            else:
+                error = 'Incorrect password. Please try again.'
+        else:
+            error = 'Email not found. Please register first.'
 
-        return 'Invalid credentials'
+        return render_template('login.html', error=error)
 
-    return render_template('login.html')
+    return render_template('login.html', error=None)
 
 @app.route('/logout')
 @login_required
@@ -210,8 +242,13 @@ def search_items():
 @app.route('/all-users', methods=['GET'])
 def all_users():
     users = User.query.all()
-    result = [{'id': user.id, 'email': user.email} for user in users]
-    return jsonify(result)
+    return render_template('all_users.html', users=users)
+
+@app.route('/user/<int:user_id>', methods=['GET'])
+def user_profile(user_id):
+    user = User.query.get_or_404(user_id)
+    items = Item.query.filter_by(user_id=user_id).all()
+    return render_template('user_profile.html', user=user, items=items)
 
 # Route to retrive all items
 if __name__ == '__main__':

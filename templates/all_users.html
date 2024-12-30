@@ -65,7 +65,7 @@
     <div id="navbar">
         <h1 id="logo">My Closet</h1>
         <div class="nav-links">
-            <a href="/all-users" class="nav-item">All Uses</a>
+            <a href="/all-users" class="nav-item">All Users</a>
             {% if current_user.is_authenticated %}
                 <a href="{{ url_for('closet') }}" class="nav-item">My Closet</a>
                 <a href="{{ url_for('logout') }}" class="nav-item">Logout</a>   

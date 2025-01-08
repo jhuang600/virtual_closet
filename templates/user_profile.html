@@ -37,8 +37,27 @@
         <h2 class="profile-name">{{ user.name }}</h2>
         <h3>Closet Items</h3>
 
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <form id="filterForm">
+                <input type="text" id="searchName" placeholder="Search by name">
+                <select id="searchCategory">
+                    <option value="">All Categories</option>
+                    <option value="Top">Top</option>
+                    <option value="Bottom">Bottom</option>
+                    <option value="Dress & skirt">Dress & skirt</option>
+                    <option value="Sleepwear & Loungewear">Sleepwear & Loungewear</option>
+                    <option value="Outerwear">Outerwear</option>
+                    <option value="Innerwear & Underwear">Innerwear & Underwear</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Shoes">Shoes</option>
+                </select>
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
         <!-- Closet Items -->
-        <div class="closet-items">
+        <div class="closet-items" id="closetItems">
             {% for item in items %}
                 <div class="item">
                     <img src="{{ item.image_url }}" alt="{{ item.name }}">
@@ -51,6 +70,29 @@
             {% endfor %}
         </div>
     </div>
+
+    <script>
+        document.getElementById('filterForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const searchName = document.getElementById('searchName').value.toLowerCase();
+            const searchCategory = document.getElementById('searchCategory').value.toLowerCase();
+            const closetItems = document.querySelectorAll('.item');
+
+            closetItems.forEach(item => {
+                const itemName = item.querySelector('.item-name').textContent.toLowerCase();
+                const itemCategory = item.querySelector('.item-details span:first-child').textContent.toLowerCase();
+                
+                const nameMatch = itemName.includes(searchName);
+                const categoryMatch = !searchCategory || itemCategory.includes(searchCategory);
+
+                if (nameMatch && categoryMatch) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 

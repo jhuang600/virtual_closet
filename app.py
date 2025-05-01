@@ -3,7 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
+import smtplib
+from email.mime.text import MIMEText
+from itsdangerous import URLSafeTimedSerializer
 import os
+import json
 
 app = Flask(__name__)
 
@@ -15,9 +19,15 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Configure the SQLite database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///closet.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = 'jessica.huang200@gmail.com'  
+app.config['MAIL_PASSWORD'] = 'atsrqbuzorddludr'     
+app.config['MAIL_DEFAULT_SENDER'] = 'jessica.huang200@gmail.com'
 # Secret key for session management
-app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.config['SECRET_KEY'] = '1fHGjHqTyA3n5FtZ_lC7PqE0qzP7H0UdK_OZs7kXISk'
+
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 # Initialize the database and login manager
 db = SQLAlchemy(app)
@@ -30,6 +40,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), nullable=False, unique=True)
     password = db.Column(db.String(150), nullable=False)
     profile_picture = db.Column(db.String(200), nullable=True)
+    confirmed = db.Column(db.Boolean, default=False)
 
 # Define the database model
 class Item(db.Model):
@@ -84,20 +95,60 @@ def register():
         if error:  # If file saving failed, use the default avatar
             profile_picture_path = 'default-avatar.png'
 
-        # Create the user record
-        new_user = User(
-            name=name,
-            email=email,
-            password=hashed_password,
-            profile_picture=url_for('static', filename=profile_picture_path)
-        )
-        db.session.add(new_user)
-        db.session.commit()
+        user_data = {
+            'name': name,
+            'email': email,
+            'password': hashed_password,
+            'profile_picture': profile_picture_path
+        }
+        token = serializer.dumps(json.dumps(user_data), salt='email-confirm')
+        confirm_url = url_for('confirm_email', token=token, _external=True)
+        body = f'Hi {name}, confirm your email: {confirm_url}'
 
-        return redirect('/login')
+        try:
+            send_email(email, 'Confirm your email for MyCloset', body)
+            return redirect('/login')
+        except Exception as e:
+            print("Email sending failed:", e)
+            return render_template('register.html', error="Failed to send confirmation email.")
 
     return render_template('register.html', error=None)
 
+
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        user_data = json.loads(serializer.loads(token, salt='email-confirm', max_age=3600))
+    except Exception:
+        return 'Invalid or expired confirmation link.'
+
+    if User.query.filter_by(email=user_data['email']).first():
+        return 'This email is already confirmed.'
+
+    new_user = User(
+        name=user_data['name'],
+        email=user_data['email'],
+        password=user_data['password'],
+        profile_picture=url_for('static', filename=user_data['profile_picture']),
+        confirmed=True
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return 'Your account has been verified! You can now log in.'
+
+
+def send_email(to, subject, body):
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = app.config['MAIL_DEFAULT_SENDER']
+    msg['To'] = to
+
+    with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+        server.starttls()
+        server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        server.send_message(msg)
 
 
 def save_file(file, upload_folder):
@@ -115,13 +166,17 @@ def save_file(file, upload_folder):
 # Login user
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None  # Initialize error to avoid UnboundLocalError
+
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
         
         user = User.query.filter_by(email=email).first()
         if user:
-            if check_password_hash(user.password, password):
+            if not user.confirmed:
+                error = 'Please confirm your email before logging in.'
+            elif check_password_hash(user.password, password):
                 login_user(user)
                 return redirect('/')
             else:
@@ -129,9 +184,8 @@ def login():
         else:
             error = 'Email not found. Please register first.'
 
-        return render_template('login.html', error=error)
+    return render_template('login.html', error=error)
 
-    return render_template('login.html', error=None)
 
 @app.route('/logout')
 @login_required

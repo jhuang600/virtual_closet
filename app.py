@@ -22,10 +22,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USERNAME'] = 'jessica.huang200@gmail.com'  
-app.config['MAIL_PASSWORD'] = 'atsrqbuzorddludr'     
+app.config['MAIL_PASSWORD'] = '#####'     
 app.config['MAIL_DEFAULT_SENDER'] = 'jessica.huang200@gmail.com'
 # Secret key for session management
-app.config['SECRET_KEY'] = '1fHGjHqTyA3n5FtZ_lC7PqE0qzP7H0UdK_OZs7kXISk'
+app.config['SECRET_KEY'] = '###'
 
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
